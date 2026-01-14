@@ -20,7 +20,7 @@
 
 #include <stdio.h>
 #include <stdbool.h>
-#include "chip.h"
+#include "wokwi-api.h"
 
 // Control indices
 #define CONTROL_MAGNETIC_FIELD 0
@@ -41,6 +41,9 @@ static a3144_state_t state = {
   .sensitivity = 30.0f,     // 30mT typical
   .output_state = true,     // Default HIGH (no magnet)
 };
+
+// Forward declarations
+static void update_output(void);
 
 // Initialize the chip
 void chip_init(void) {

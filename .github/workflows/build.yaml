@@ -1,58 +1,53 @@
-name: Build Chip
+name: Build Chips
 
 on:
   push:
     branches: [ main, master ]
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 jobs:
-  build-a3144:
-    name: Build A3144
+  build:
+    name: Build All Chips
     runs-on: ubuntu-22.04
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Build a3144 chip
-        uses: wokwi/wokwi-chip-clang-action@main
-        with:
-          sources: "a3144/chip.c"
-          output-name: "a3144.chip.wasm"
+      - name: Install wokwi-cli
+        run: npm install -g wokwi-cli
 
-      - name: Copy a3144 chip.json
-        run: |
-          mkdir -p dist
-          cp a3144/chip.json dist/a3144.chip.json
+      - name: Build all chips
+        run: ./build.sh
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: a3144-chip
+          name: chips
           path: |
-            dist/a3144.chip.json
-            dist/a3144.chip.wasm
+            dist/*.wasm
+            dist/*.json
 
-  # The release job only runs when you push a tag starting with "v", e.g. v1.0.0
   release:
     name: Release
-    needs: build-a3144
+    needs: build
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
-      - name: Download compiled chip
+      - name: Download compiled chips
         uses: actions/download-artifact@v4
         with:
-          name: a3144-chip
-          path: chip
+          name: chips
+          path: dist
 
       - name: Create a zip archive
-        run: cd chip && zip -9 ../chip.zip a3144.*
-        env:
-          ZIP_VERSION: ${{ github.ref_name }}
+        working-directory: dist
+        run: zip -r ../chips.zip .
 
       - name: Upload release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: chip.zip
+          artifacts: chips.zip
           token: ${{ secrets.GITHUB_TOKEN }}
           generateReleaseNotes: true
