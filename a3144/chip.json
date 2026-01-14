@@ -1,0 +1,49 @@
+{
+  "name": "A3144",
+  "description": "A3144 Hall Effect Sensor",
+  "pinCount": 3,
+  "pins": [
+    {
+      "name": "OUT",
+      "type": "gpio",
+      "direction": "output",
+      "description": "Digital output (active LOW when magnet detected)"
+    },
+    {
+      "name": "VCC",
+      "type": "power",
+      "direction": "input"
+    },
+    {
+      "name": "GND",
+      "type": "power",
+      "direction": "input"
+    }
+  ],
+  "controls": [
+    {
+      "name": "magneticFieldDetected",
+      "displayName": "Magnetic Field",
+      "type": "boolean",
+      "initialValue": false,
+      "description": "Simulate magnetic field presence (pulls output LOW)"
+    },
+    {
+      "name": "outputInverted",
+      "displayName": "Output Inverted",
+      "type": "boolean",
+      "initialValue": true,
+      "description": "Output polarity (true = active LOW, false = active HIGH)"
+    },
+    {
+      "name": "sensitivity",
+      "displayName": "Sensitivity (mT)",
+      "type": "number",
+      "min": 1,
+      "max": 100,
+      "initialValue": 30,
+      "description": "Magnetic field sensitivity in millitesla"
+    }
+  ],
+  "image": "a3144.svg"
+}
