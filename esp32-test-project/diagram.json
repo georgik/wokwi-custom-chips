@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "author": "Uri Shaked",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-devkit-c-v4",
+      "id": "esp",
+      "attrs": {}
+    },
+    {
+      "type": "chip-a3144",
+      "id": "hall1",
+      "attrs": {}
+    },
+    {
+      "type": "led-red",
+      "id": "led1",
+      "attrs": {}
+    }
+  ],
+  "connections": [
+    [
+      "esp:TX",
+      "$serialMonitor:RX",
+      ""
+    ],
+    [
+      "esp:RX",
+      "$serialMonitor:TX",
+      ""
+    ],
+    [
+      "hall1:OUT",
+      "esp:4",
+      ""
+    ],
+    [
+      "hall1:VCC",
+      "esp:3V3",
+      ""
+    ],
+    [
+      "hall1:GND",
+      "esp:GND",
+      ""
+    ],
+    [
+      "led1:A",
+      "esp:2",
+      ""
+    ],
+    [
+      "led1:C",
+      "esp:GND",
+      ""
+    ]
+  ]
+}

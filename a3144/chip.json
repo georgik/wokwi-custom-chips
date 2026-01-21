@@ -1,49 +1,23 @@
 {
-  "name": "A3144",
-  "description": "A3144 Hall Effect Sensor",
-  "pinCount": 3,
-  "pins": [
-    {
-      "name": "OUT",
-      "type": "gpio",
-      "direction": "output",
-      "description": "Digital output (active LOW when magnet detected)"
-    },
-    {
-      "name": "VCC",
-      "type": "power",
-      "direction": "input"
-    },
-    {
-      "name": "GND",
-      "type": "power",
-      "direction": "input"
-    }
-  ],
+  "name": "A3144 Hall Effect Sensor",
+  "author": "Wokwi Custom Chips",
+  "pins": ["OUT", "VCC", "GND"],
   "controls": [
     {
-      "name": "magneticFieldDetected",
-      "displayName": "Magnetic Field",
-      "type": "boolean",
-      "initialValue": false,
-      "description": "Simulate magnetic field presence (pulls output LOW)"
-    },
-    {
-      "name": "outputInverted",
-      "displayName": "Output Inverted",
-      "type": "boolean",
-      "initialValue": true,
-      "description": "Output polarity (true = active LOW, false = active HIGH)"
-    },
-    {
-      "name": "sensitivity",
-      "displayName": "Sensitivity (mT)",
-      "type": "number",
-      "min": 1,
+      "id": "magneticField",
+      "label": "Magnetic Field",
+      "type": "range",
+      "min": 0,
       "max": 100,
-      "initialValue": 30,
-      "description": "Magnetic field sensitivity in millitesla"
+      "step": 1
+    },
+    {
+      "id": "outputInverted",
+      "label": "Output Inverted (0=normal, 1=inverted)",
+      "type": "range",
+      "min": 0,
+      "max": 1,
+      "step": 1
     }
-  ],
-  "image": "a3144.svg"
+  ]
 }

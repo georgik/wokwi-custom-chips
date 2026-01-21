@@ -8,120 +8,95 @@
  * - Typically active LOW (output = LOW when magnet detected)
  * - Open-drain output (requires pull-up resistor on real hardware)
  * - South pole on branded side triggers output
- * - North pole may or may not trigger depending on sensitivity
  *
  * Characteristics:
  * - Supply voltage: 4.5V to 24V
  * - Output type: Open-drain NPN (requires pull-up)
  * - Operating temperature: -40°C to +85°C
  * - Response time: Typically 3μs
- * - Sensitivity: ~30mT typical (adjustable via control)
  */
 
 #include <stdio.h>
-#include <stdbool.h>
+#include <stdlib.h>
 #include "wokwi-api.h"
 
-// Control indices
-#define CONTROL_MAGNETIC_FIELD 0
-#define CONTROL_OUTPUT_INVERTED 1
-#define CONTROL_SENSITIVITY 2
+// Attribute handles
+static uint32_t magnetic_field_attr;
+static uint32_t output_inverted_attr;
 
-// Chip state
-typedef struct {
-  bool magnetic_field;      // Magnetic field present
-  bool output_inverted;     // Output polarity (true = active LOW)
-  float sensitivity;        // Sensitivity in millitesla
-  bool output_state;        // Current output state
-} a3144_state_t;
+// Pin handles
+static pin_t out_pin;
 
-static a3144_state_t state = {
-  .magnetic_field = false,
-  .output_inverted = true,  // A3144 is active LOW
-  .sensitivity = 30.0f,     // 30mT typical
-  .output_state = true,     // Default HIGH (no magnet)
-};
+// Timer handle
+static timer_t poll_timer;
 
-// Forward declarations
-static void update_output(void);
+// Previous values for change detection
+static uint32_t prev_magnetic_field = 0;
+static uint32_t prev_inverted = 1;
+
+// Update output pin based on attributes
+static void update_output(void) {
+  uint32_t magnetic_field = attr_read(magnetic_field_attr);
+  uint32_t inverted = attr_read(output_inverted_attr);
+
+  // A3144 is active LOW: output goes LOW when magnetic field is detected
+  bool field_detected = (magnetic_field > 50); // Threshold for "detected"
+
+  bool output_state;
+  if (inverted) {
+    // Active LOW mode (default A3144 behavior)
+    output_state = !field_detected;
+  } else {
+    // Active HIGH mode
+    output_state = field_detected;
+  }
+
+  // Write to output pin
+  pin_write(out_pin, output_state ? HIGH : LOW);
+
+  // Log only when values change
+  if (magnetic_field != prev_magnetic_field || inverted != prev_inverted) {
+    printf("A3144: Magnetic field=%lu, Inverted=%lu, Output=%s\n",
+           magnetic_field, inverted,
+           output_state ? "HIGH" : "LOW");
+    prev_magnetic_field = magnetic_field;
+    prev_inverted = inverted;
+  }
+}
+
+// Timer callback - called periodically to check attribute changes
+static void poll_callback(void *user_data) {
+  (void)user_data; // Unused
+  update_output();
+}
 
 // Initialize the chip
 void chip_init(void) {
+  // Initialize attributes (magnetic field strength: 0-100, default 0)
+  magnetic_field_attr = attr_init("magneticField", 0);
+
+  // Initialize output inverted attribute (0=normal, 1=inverted), default 1 (inverted/active LOW)
+  output_inverted_attr = attr_init("outputInverted", 1);
+
+  // Initialize OUT pin as output
+  out_pin = pin_init("OUT", OUTPUT_HIGH);
+
+  // Set initial output state
   update_output();
+
+  // Set up a timer to poll attributes every 100ms (100,000 microseconds)
+  const timer_config_t timer_config = {
+    .callback = poll_callback,
+    .user_data = NULL,
+  };
+  poll_timer = timer_init(&timer_config);
+  timer_start(poll_timer, 100000, true); // 100ms, repeating
+
   printf("A3144 Hall Effect Sensor initialized\n");
-}
-
-// Update output state based on magnetic field
-static void update_output(void) {
-  bool field_detected = state.magnetic_field;
-
-  // A3144 output is active LOW (pulled to ground when magnet detected)
-  if (state.output_inverted) {
-    state.output_state = !field_detected;  // LOW when field present
-  } else {
-    state.output_state = field_detected;   // HIGH when field present
-  }
-
-  printf("A3144: Output = %s (magnetic %s)\n",
-         state.output_state ? "HIGH" : "LOW",
-         state.magnetic_field ? "detected" : "not detected");
-}
-
-// Handle control changes
-void chip_set_control(size_t index, double value) {
-  switch (index) {
-    case CONTROL_MAGNETIC_FIELD:
-      state.magnetic_field = (bool)value;
-      printf("A3144: Magnetic field %s\n",
-             state.magnetic_field ? "present" : "absent");
-      update_output();
-      break;
-
-    case CONTROL_OUTPUT_INVERTED:
-      state.output_inverted = (bool)value;
-      printf("A3144: Output polarity set to %s\n",
-             state.output_inverted ? "active LOW" : "active HIGH");
-      update_output();
-      break;
-
-    case CONTROL_SENSITIVITY:
-      state.sensitivity = (float)value;
-      printf("A3144: Sensitivity set to %.1f mT\n", state.sensitivity);
-      break;
-
-    default:
-      fprintf(stderr, "A3144: Unknown control index %zu\n", index);
-      break;
-  }
-}
-
-// Get current control value
-double chip_get_control(size_t index) {
-  switch (index) {
-    case CONTROL_MAGNETIC_FIELD:
-      return state.magnetic_field ? 1.0 : 0.0;
-
-    case CONTROL_OUTPUT_INVERTED:
-      return state.output_inverted ? 1.0 : 0.0;
-
-    case CONTROL_SENSITIVITY:
-      return (double)state.sensitivity;
-
-    default:
-      fprintf(stderr, "A3144: Unknown control index %zu\n", index);
-      return 0.0;
-  }
-}
-
-// Get output pin state (for reading by microcontroller)
-bool chip_get_pin_state(int pin) {
-  if (pin == 0) {  // OUT pin
-    return state.output_state;
-  }
-  return false;
 }
 
 // Cleanup
 void chip_deinit(void) {
+  timer_stop(poll_timer);
   printf("A3144 Hall Effect Sensor deinitialized\n");
 }

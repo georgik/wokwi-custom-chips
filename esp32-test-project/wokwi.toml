@@ -1,0 +1,11 @@
+# Wokwi Configuration File
+# Reference: https://docs.wokwi.com/vscode/project-config
+[wokwi]
+version = 1
+firmware = 'build/flasher_args.json'
+elf = 'build/esp32-test-project.elf'
+gdbServerPort = 3333
+
+[[chip]]
+name = 'a3144'
+binary = '../dist/a3144.chip.wasm'

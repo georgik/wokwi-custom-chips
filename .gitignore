@@ -1,0 +1,26 @@
+# Build outputs
+dist/
+build/
+
+# WASM binaries
+*.wasm
+
+# Object files
+*.o
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node modules (if using wokwi-cli locally)
+node_modules/
+
+# Logs
+*.log
