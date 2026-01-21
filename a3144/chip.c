@@ -94,9 +94,3 @@ void chip_init(void) {
 
   printf("A3144 Hall Effect Sensor initialized\n");
 }
-
-// Cleanup
-void chip_deinit(void) {
-  timer_stop(poll_timer);
-  printf("A3144 Hall Effect Sensor deinitialized\n");
-}

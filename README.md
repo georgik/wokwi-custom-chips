@@ -256,10 +256,6 @@ void chip_init(void) {
   poll_timer = timer_init(&config);
   timer_start(poll_timer, 100000, true);  // 100ms, repeating
 }
-
-void chip_deinit(void) {
-  timer_stop(poll_timer);
-}
 ```
 
 #### Step 4: Build and Test
@@ -476,6 +472,22 @@ attr_init("magneticField", 0);  // Must match exactly
 
 **Case-sensitive:** "magneticField" != "magneticfield"
 
+### 11. Using chip_deinit() Function
+
+**Problem:** Attempting to implement `chip_deinit()` which doesn't exist in the Wokwi API.
+
+**Wrong:**
+```c
+void chip_deinit(void) {
+  timer_stop(poll_timer);
+  // Cleanup code
+}
+```
+
+**Solution:** Remove `chip_deinit()` entirely. The Wokwi API only requires `chip_init()`. Resources are automatically cleaned up when the simulation ends.
+
+**Impact:** The function will never be called, and any cleanup code (like stopping timers) won't execute. This is acceptable since Wokwi handles cleanup on simulation shutdown.
+
 ## API Reference
 
 ### Required Functions
@@ -488,11 +500,7 @@ Called once when chip is instantiated in the simulation. Use to:
 - Set up timers with `timer_init()`
 - Set initial pin states
 
-#### `void chip_deinit(void)`
-
-Called when chip is destroyed. Use to:
-- Stop timers with `timer_stop()`
-- Clean up resources
+**Note:** There is no `chip_deinit()` function in the Wokwi API. Resources are automatically cleaned up when the simulation ends.
 
 ### Core API Functions
 
